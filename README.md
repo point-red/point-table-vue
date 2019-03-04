@@ -1,6 +1,6 @@
 # Point Table Vue
 
-Table component that support freeze column, fix header when scrolling down, and manage column visibility
+Table component that support freeze column, fix header when scrolling down, and manage column visibility [Demo](https://point-table-vue.netlify.com)
 
 ## Installation
 
