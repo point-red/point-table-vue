@@ -1,197 +1,31 @@
 <template>
-<div>
-  <div class="columns" v-show="!hideFilter">
-    <!-- Search Box -->
-    <div class="column" v-show="!hideSearch">
-      <input v-model="search"
-      @keypress="page=1"
-      class="input"
-      type="search"
-      placeholder="Search"
-      aria-label="Search">
-    </div>
-    <!-- Number of Rows -->
-    <div class="column" v-show="!hideNumberOfRowSelection">
-      <div class="select">
-        <select v-model="perPage" @change="page=1">
-          <option>10</option>
-          <option>25</option>
-          <option>50</option>
-          <option>100</option>
-        </select>
-      </div>
-    </div>
-    <!-- Freeze Column -->
-    <div class="column has-text-right" v-show="!hideFreezeColumnSelection && !isCustomHeaders">
-      <div class="select">
-        <select v-model="fixedColumnChange">
-          <template v-for="(value, index) in dataTable[0]">
-            <option :key="index" v-if="checkedColumnComputed.indexOf(index) != -1" :value="index">
-              <span>
-                {{dataHeaders[index]}}
-              </span>
-            </option>
-          </template>
-        </select>
-      </div>
-    </div>
-    <!-- Show or Hide Column -->
-    <div class="column" v-show="!hideColumnVisibilitySelection && !isCustomHeaders">
-      <div @click="dropdown" :class="{'dropdown': true, 'is-active': isActive }">
-        <div class="dropdown-trigger">
-          <button class="button" aria-haspopup="true">
-            <span>Show/hide column</span>
-            <span class="icon is-small">
-              <i class="fas fa-angle-down" aria-hidden="true"></i>
-            </span>
-          </button>
-        </div>
-        <div class="dropdown-menu" role="menu">
-          <div class="dropdown-content">
-            <div
-              class="dropdown-item"
-              v-for="(value, index) in dataTable[0]"
-              :key="index">
-              <label class="checkbox">
-              <input
-                type="checkbox"
-                :value="index"
-                :disabled="checkedColumnComputed.length == 1 && checkedColumnComputed[0] == index"
-                v-model="checkedColumnComputed">
-                {{dataHeaders[index]}}
-              </label>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div :id="uuid+'horizontal-scroll'" style="overflow-x:auto;" @scroll="horizontalScroll">
-    <table class="table is-bordered is-fullwidth" :id="uuid+'main-table'">
-      <thead :id="'thead'+uuid">
-        <tr v-for="(head, index) in dataCustomHeaders" :key="index">
-          <template v-if="isCustomHeaders">
-            <th
-              :id="uuid+'-maintable-custom-header-'+index+'-'+i"
-              v-for="(field, i) in head.fields"
-              :key="i"
-              :colspan="field.colSpan">
-              {{field.caption}}
-            </th>
+<div ref="tableWrapper" @scroll="horizontalScroll">
+  <table ref="mainTable" class="table is-fullwidth">
+    <thead ref="tableHead">
+      <slot name="p-head">
+        <tr v-if="mutableBody">
+          <template v-for="(key, index) in Object.keys(mutableBody[0])">
+            <th :key="index">{{ key }}</th>
           </template>
         </tr>
-        <tr>
-          <th
-            :id="getThId('a', fixedColumnChange)"
-            @click="sort(fixedColumnChange)"
-            class="first">
-            {{dataHeaders[fixedColumnChange]}} <i :class="icon" v-if="sortBy == fixedColumnChange"></i>
-          </th>
-          <template v-for="(value, key) in dataTable[0]">
-            <th
-              :id="getThId('a', key)"
-              @click="sort(key)"
-              :key="key"
-              v-if="checkedColumnComputed.indexOf(key) != -1 && key != fixedColumnChange"
-              :class="{'first' : checkedColumnComputed.indexOf(key) == 0}">
-              {{dataHeaders[key]}} <i :class="icon" v-if="sortBy == key"></i>
-            </th>
-          </template>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="(datum, index) in filtered" :key="index">
-          <td :id="getTdId('a', index, fixedColumnChange)">{{datum[fixedColumnChange]}}</td>
-          <template v-for="(value, key) in datum">
-            <td
-              :id="getTdId('a', index, key)"
-              :key="key"
-              v-if="checkedColumnComputed.indexOf(key) != -1 && key != fixedColumnChange">
-              {{value}}
-            </td>
-          </template>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-  <table class="table is-bordered col-fixed" :id="uuid+'table-col'">
-    <thead>
-      <template v-for="(head, index) in dataCustomHeaders">
-        <tr v-if="isCustomHeaders" :key="index">
-          <th :id="uuid+'-col-table-custom-header-'+index">{{head.fields[0].caption}}</th>
-        </tr>
-      </template>
-      <tr>
-        <th :id="uuid+'col-fix-th'" @click="sort(fixedColumnChange)">{{dataHeaders[fixedColumnChange]}} <i
-          :class="icon"
-          v-if="sortBy == fixedColumnChange"></i>
-        </th>
-      </tr>
+      </slot>
+    </thead>
+    <thead ref="stickyTableHead" class="table-head-fixed">
+      <slot name="p-sticky-head"></slot>
     </thead>
     <tbody>
-      <tr v-for="(datum, index) in filtered" :key="index">
-        <td :id="getTdId('b', index, fixedColumnChange)">{{datum[fixedColumnChange]}}</td>
-      </tr>
+      <slot name="p-body">
+        <tr v-for="(data, indexData) in mutableBody" :key="indexData">
+          <template v-for="(key, indexKey) in Object.keys(data)">
+            <th :key="indexKey" v-if="indexKey == 0">{{ data[key] }}</th>
+            <td :key="indexKey" v-else>{{ data[key] }}</td>
+          </template>
+        </tr>
+      </slot>
     </tbody>
   </table>
-  <table class="table is-bordered is-fullwidth header-fixed" :id="uuid+'header-fixed'" v-show="isShow">
-    <thead>
-      <template v-for="(head, index) in dataCustomHeaders">
-      <tr v-if="isCustomHeaders" :key="index">
-        <th
-          :id="uuid+'-header-table-custom-header-'+index+'-'+i"
-          v-for="(field, i) in head.fields"
-          :key="i"
-          :colspan="field.colSpan">
-          {{field.caption}}
-        </th>
-      </tr>
-      </template>
-      <tr>
-        <th
-          :id="getThId('b', fixedColumnChange)"
-          @click="sort(fixedColumnChange)">
-          {{dataHeaders[fixedColumnChange]}}
-          <i :class="icon" v-if="sortBy == fixedColumnChange"></i>
-        </th>
-        <template v-for="(value, index) in dataTable[0]">
-        <th
-          :key="index"
-          :id="getThId('b', index)"
-          @click="sort(index)"
-          v-if="checkedColumnComputed.indexOf(index) != -1 && index != fixedColumnChange">
-          {{dataHeaders[index]}} <i :class="icon" v-if="sortBy == index"></i>
-      </th>
-      </template>
-    </tr>
-    </thead>
-  </table>
-  <table class="table is-bordered header-fixed" v-show="isShow">
-    <thead>
-      <template v-for="(head, index) in dataCustomHeaders">
-      <tr :key="index" v-if="isCustomHeaders">
-        <th :id="uuid+'-first-left-table-custom-header-'+index">{{head.fields[0].caption}}</th>
-      </tr>
-      </template>
-      <tr>
-        <th :id="uuid+'top-left-col'" @click="sort(fixedColumnChange)">
-          {{dataHeaders[fixedColumnChange]}} <i :class="icon" v-if="sortBy == fixedColumnChange"></i>
-        </th>
-      </tr>
-    </thead>
-  </table>
-  <br>
-  <nav class="pagination is-centered" role="navigation" aria-label="pagination" v-if="pageCount > 1">
-    <a class="pagination-previous" @click="(page > 1)?page -= 1:page=page" :disabled="page == 1">Previous</a>
-    <a class="pagination-next" @click="(page < pageCount)?page += 1:page=page" :disabled="page == pageCount">Next</a>
-    <ul class="pagination-list">
-      <template v-for="(n, index) in pageCount">
-      <li :key="index" v-if="n > page - 5 && n < page + 5">
-        <a @click="page=n" :class="classListPage(n)">{{n}}</a>
-      </li>
-      </template>
-    </ul>
-  </nav>
+  <table ref="headerTable"></table>
+  <div ref="anchorBottom"></div>
 </div>
 </template>
 
@@ -202,438 +36,119 @@ export default {
     data: {
       type: Array
     },
-    headers: {
-      type: Object
-    },
-    customHeaders: {
+    header: {
       type: Array
-    },
-    hideFilter: {
-      type: Boolean,
-      default: false
-    },
-    hideSearch: {
-      type: Boolean,
-      default: false
-    },
-    hideNumberOfRowSelection: {
-      type: Boolean,
-      default: false
-    },
-    hideFreezeColumnSelection: {
-      type: Boolean,
-      default: false
-    },
-    hideColumnVisibilitySelection: {
-      type: Boolean,
-      default: false
     }
   },
   data: function () {
     return {
-      search: '',
-      sortBy: '',
-      sortMethod: 'asc',
-      perPage: 10,
-      page: 1,
-      checkedColumn: null,
-      isActive: false,
-      isShow: false,
-      fixedColumn: null,
-      uuid: this.guid(),
-      mutableData: this.data
+      isTableHeadFixed: true,
+      tableHeadHeight: 0,
+      anchorTop: 0,
+      anchorBottom: 0,
+      tableHeight: 0,
+      mutableHead: this.header,
+      mutableBody: this.data
     }
   },
   computed: {
-    checkedColumnComputed: {
-      get: function () {
-        if (!this.checkedColumn) {
-          this.checkedColumn = Object.keys(this.dataTable[0])
-        }
-        return this.checkedColumn
-      },
-      set: function (newValue) {
-        this.checkedColumn = newValue
-      }
-    },
-    isCustomHeaders: function () {
-      return !!this.customHeaders || this.hasExtraSlot
-    },
-    hasExtraSlot () {
-      return !!this.$slots['p-extra']
-    },
-    hasHeadSlot () {
-      return !!this.$slots['p-head']
-    },
-    hasbodySlot () {
-      return !!this.$slots['p-body']
-    },
-    dataTable: {
-      get () {
-        if (this.mutableData && !this.hasbodySlot) {
-          return this.mutableData
-        } else if (this.hasbodySlot) {
-          let data = []
-          let idx = 0
-          for (let i = 0; i < this.$slots['p-body'].length; i++) {
-            if (this.$slots['p-body'][i].tag) {
-              let datum = []
-              let index = 0
-              for (let k = 0; k < this.$slots['p-body'][i].children.length; k++) {
-                if (this.$slots['p-body'][i].children[k].tag) {
-                  datum[index++] = this.$slots['p-body'][i].children[k].children[0].text
-                }
-              }
-              datum = Object.assign({}, datum)
-              data[idx++] = datum
-            }
-          }
-          return data
-        } else {
-          return null
-        }
-      },
-      set (data) {
-        return data
-      }
-    },
-    dataHeaders: function () {
-      if (this.headers) {
-        return this.headers
-      } else if (this.hasHeadSlot) {
-        let headers = []
-        let idx = 0
-        for (let i = 0; i < this.$slots['p-head'].length; i++) {
-          if (this.$slots['p-head'][i].tag) {
-            for (let k = 0; k < this.$slots['p-head'][i].children.length; k++) {
-              if (this.$slots['p-head'][i].children[k].tag) {
-                headers[idx++] = this.$slots['p-head'][i].children[k].children[0].text
-              }
-            }
-          }
-        }
-        headers = Object.assign({}, headers)
-        return headers
-      } else {
-        let a = Object.keys(this.dataTable[0])
-        let headers = []
-        for (let i = 0; i < a.length; i++) {
-          headers[a[i]] = a[i]
-        }
-        headers = Object.assign({}, headers)
-        return headers
-      }
-    },
-    dataCustomHeaders: function () {
-      if (this.customHeaders) {
-        return this.customHeaders
-      } else if (this.hasExtraSlot) {
-        let customHeaders = []
-        let idx = 0
-        for (let i = 0; i < this.$slots['p-extra'].length; i++) {
-          if (this.$slots['p-extra'][i].tag) {
-            let fields = []
-            let index = 0
-            for (let k = 0; k < this.$slots['p-extra'][i].children.length; k++) {
-              if (this.$slots['p-extra'][i].children[k].tag) {
-                fields[index++] = {
-                  caption: (this.$slots['p-extra'][i].children[k].children) ? this.$slots['p-extra'][i].children[k].children[0].text : '',
-                  colSpan: (!!this.$slots['p-extra'][i].children[k].data && !!this.$slots['p-extra'][i].children[k].data.attrs.colspan) ? this.$slots['p-extra'][i].children[k].data.attrs.colspan : 1,
-                  rowSpan: (!!this.$slots['p-extra'][i].children[k].data && !!this.$slots['p-extra'][i].children[k].data.attrs.rowspan) ? this.$slots['p-extra'][i].children[k].data.attrs.rowspan : 1
-                }
-              }
-            }
-            customHeaders[idx++] = {
-              fields: fields
-            }
-          }
-        }
-        return customHeaders
-      }
-    },
-    fixedColumnChange: {
-      get: function () {
-        if (!this.fixedColumn) {
-          this.fixedColumn = Object.keys(this.dataTable[0])[0]
-        }
-        if (this.checkedColumnComputed.indexOf(this.fixedColumn) < 0) {
-          this.fixedColumn = this.getFirstColumn()
-        }
-        return this.fixedColumn
-      },
-      set: function (newValue) {
-        this.fixedColumn = newValue
-      }
-    },
-    // filter data with search keyword
-    filterSearch: function () {
-      let f = this.dataTable.filter((p) => {
-        let x = (this.search == '')
-        for (let key in p) {
-          let value = p[key] + ''
-          if (value.toLowerCase().match('.*' + this.search.toLowerCase() + '.*')) {
-            x = true
-          }
-        }
-        return x
-      })
-      return f
-    },
-    filtered: function () {
-      let f = this.filterSearch
-      if (this.sortBy != '') {
-        let k = this.sortBy
-        let m = this.sortMethod
-        f.sort(function (a, b) {
-          if (m == 'asc') {
-            if (a[k] < b[k]) {
-              return -1
-            }
-            if (a[k] > b[k]) {
-              return 1
-            }
-          }
-
-          if (m == 'desc') {
-            if (a[k] > b[k]) {
-              return -1
-            }
-            if (a[k] < b[k]) {
-              return 1
-            }
-          }
-
-          return 0
-        })
-      }
-      return f.slice((this.page - 1) * this.perPage, this.page * this.perPage)
-    },
-    icon: function () {
-      if (this.sortMethod == 'asc') {
-        return 'fas fa-sort-up'
-      } else {
-        return 'fas fa-sort-down'
-      }
-    },
-    // get page count to generate pagination
-    pageCount: function () {
-      let count = Math.ceil(this.filterSearch.length / this.perPage)
-      return count
-    }
   },
   methods: {
-    init () {
-      let data = []
-      let idx = 0
-      for (let i = 0; i < this.$slots['p-body'].length; i++) {
-        if (this.$slots['p-body'][i].tag) {
-          let datum = []
-          let index = 0
-          for (let k = 0; k < this.$slots['p-body'][i].children.length; k++) {
-            if (this.$slots['p-body'][i].children[k].tag) {
-              datum[index++] = this.$slots['p-body'][i].children[k].children[0].text
-            }
-          }
-          datum = Object.assign({}, datum)
-          data[idx++] = datum
-        }
-      }
-
-      this.mutableData = data
-    },
-    s4: function () {
-      return Math.floor((1 + Math.random()) * 0x10000)
-        .toString(16)
-        .substring(1)
-    },
-    guid: function () {
-      return this.s4() + this.s4() + '-' + this.s4() + '-' + this.s4() + '-' +
-      this.s4() + '-' + this.s4() + this.s4() + this.s4()
-    },
-    getThId: function (a, key) {
-      return (a == 'a') ? this.uuid + 'col-' + key : this.uuid + 'cl-' + key
-    },
-    getTdId: function (a, index, key) {
-      if (key != this.fixedColumnChange) { return '' }
-      return (a == 'a') ? this.uuid + 'left-' + index : this.uuid + 'lft-' + index
-    },
-    // toggle dropdown for show/hide column
-    dropdown: function () {
-      this.isActive = !this.isActive
-    },
-    sort: function (s) {
-      this.sortBy = s
-      this.sortMethod = (this.sortMethod == 'asc') ? 'desc' : 'asc'
-    },
-    classListPage: function (p) {
-      if (p == this.page) {
-        return 'pagination-link is-current'
-      } else {
-        return 'pagination-link'
-      }
-    },
-    classPrevNext: function (p) {
-      if (p == 'prev' && this.page == 1) {
-        return 'page-item disabled'
-      }
-      if (p == 'next' && this.page == Math.ceil(this.dataTable.length / this.perPage)) {
-        return 'page-item disabled'
-      }
-      return 'page-item'
-    },
-    horizontalScroll: function () {
-      let mainTable = document.getElementById(this.uuid + 'main-table')
-      let secondTable = document.getElementById(this.uuid + 'header-fixed')
-      let thirdTable = document.getElementById(this.uuid + 'table-col')
-      let dv = document.getElementById(this.uuid + 'horizontal-scroll')
-      secondTable.style.left = mainTable.getBoundingClientRect().x + 'px'
-      for (let key in this.dataTable[0]) {
-        if (this.checkedColumnComputed.indexOf(key) != -1) {
-          let a = document.getElementById(this.uuid + 'cl-' + key)
-          if (a.getBoundingClientRect().x < thirdTable.getBoundingClientRect().x || a.getBoundingClientRect().x > (thirdTable.getBoundingClientRect().x + dv.getBoundingClientRect().width)) {
-            a.classList.add('hide')
+    horizontalScroll () {
+      // sync sticky table head with original table head
+      this.$refs.stickyTableHead.style.left = this.$refs.mainTable.getBoundingClientRect().x + 'px'
+      var bodyX = this.$slots['p-body'][0].children[0].elm.getBoundingClientRect().x;
+      // remove fixed head that out of table area
+      for (var i = 0; i < this.$slots['p-sticky-head'][0].children.length; i++) {
+        var thX = this.$refs.mainTable.children[1].children[0].children[i].getBoundingClientRect().x
+        var thWidth = this.$refs.stickyTableHead.children[0].children[i].clientWidth
+        // ignore sticky th
+        if (i > 0) {
+          // remove fixed head that out of table area
+          if (thX  + thWidth > bodyX + this.$refs.tableWrapper.clientWidth) {
+            // hide right column
+            this.$refs.stickyTableHead.children[0].children[i].style.visibility = 'hidden'
+          } else if (thX <= bodyX || this.anchorTop > 0 || this.anchorBottom < 0) {
+            // hide left column
+            this.$refs.stickyTableHead.children[0].children[i].style.visibility = 'hidden'
           } else {
-            a.classList.remove('hide')
-          }
-        }
-      }
-      if (this.isCustomHeaders) {
-        for (let index = 0; index < this.dataCustomHeaders.length; index++) {
-          for (let i = 0; i < this.dataCustomHeaders[index].fields.length; i++) {
-            let a = document.getElementById(this.uuid + '-header-table-custom-header-' + index + '-' + i)
-            if (a.getBoundingClientRect().x < thirdTable.getBoundingClientRect().x || a.getBoundingClientRect().x > (thirdTable.getBoundingClientRect().x + dv.getBoundingClientRect().width)) {
-              a.classList.add('hide')
-            } else {
-              a.classList.remove('hide')
-            }
+            this.$refs.stickyTableHead.children[0].children[i].style.visibility = 'visible'
           }
         }
       }
     },
-    tableHeader: function () {
-      let mainTable = document.getElementById(this.uuid + 'main-table')
-      let secondTable = document.getElementById(this.uuid + 'header-fixed')
-      let thead = document.getElementById('thead' + this.uuid)
-      secondTable.style.width = mainTable.offsetWidth + 'px'
-      if (mainTable.getBoundingClientRect().y <= 0 && mainTable.getBoundingClientRect().y >= (-1 * mainTable.offsetHeight) + thead.offsetHeight) {
-        this.isShow = true
+    verticalScroll () {
+      var scroll = window.scrollY
+      this.anchorTop = this.$refs.mainTable.getBoundingClientRect().y
+      this.anchorBottom = this.$refs.anchorBottom.getBoundingClientRect().y
+      if (this.anchorTop <= 0 && this.anchorBottom >= 0) {
+        this.$refs.stickyTableHead.style.visibility = 'visible'
       } else {
-        this.isShow = false
+        this.$refs.stickyTableHead.style.visibility = 'hidden'
       }
-      let x = document.getElementById(this.uuid + 'top-left-col')
-      let y = document.getElementById(this.uuid + 'col-' + this.fixedColumnChange)
-      x.width = y.offsetWidth
-      for (let key in this.dataTable[0]) {
-        if (this.checkedColumnComputed.indexOf(key) != -1) {
-          let a = document.getElementById(this.uuid + 'cl-' + key)
-          let b = document.getElementById(this.uuid + 'col-' + key)
-          a.width = b.offsetWidth
-        }
-      }
-    },
-    colHeight: function () {
-      let x = document.getElementById(this.uuid + 'top-left-col')
-      let z = document.getElementById(this.uuid + 'col-fix-th')
-      let y = document.getElementById(this.uuid + 'col-' + this.fixedColumnChange)
-      x.height = y.offsetHeight
-      z.height = y.offsetHeight
-      for (let i = 0; i < this.filtered.length; i++) {
-        let a = document.getElementById(this.uuid + 'left-' + i)
-        let b = document.getElementById(this.uuid + 'lft-' + i)
-        b.height = a.offsetHeight
-      }
-      if (this.isCustomHeaders) {
-        for (let i = 0; i < this.dataCustomHeaders.length; i++) {
-          let c = document.getElementById(this.uuid + '-maintable-custom-header-' + i + '-0')
-          let d = document.getElementById(this.uuid + '-col-table-custom-header-' + i)
-          let e = document.getElementById(this.uuid + '-first-left-table-custom-header-' + i)
-          d.height = c.offsetHeight
-          e.height = c.offsetHeight
-        }
-      }
-    },
-    colWidth: function () {
-      let x = document.getElementById(this.uuid + 'col-fix-th')
-      let a = document.getElementById(this.uuid + 'col-' + this.fixedColumnChange)
-      x.width = a.offsetWidth
-    },
-    colFixed: function () {
-      let mainTable = document.getElementById(this.uuid + 'main-table')
-      let secondTable = document.getElementById(this.uuid + 'table-col')
-      secondTable.style.top = mainTable.getBoundingClientRect().y + 'px'
-    },
-    getFirstColumn: function () {
-      for (let key in this.dataTable[0]) {
-        if (this.checkedColumnComputed.indexOf(key) != -1) { return key }
-      }
-      return this.checkedColumnComputed[0]
     }
   },
   mounted () {
-    this.colHeight()
-    this.colWidth()
-    this.colFixed()
+    window.addEventListener('scroll', this.verticalScroll)
+    window.addEventListener('scroll', this.horizontalScroll)
+    window.addEventListener('resize', this.verticalScroll)
+    window.addEventListener('resize', this.horizontalScroll)
+    this.$refs.stickyTableHead.style.visibility = 'hidden'    
+    this.$refs.stickyTableHead.style.width = this.$refs.mainTable.clientWidth + 'px'
+    for (var i = 0; i < this.$slots['p-head'][0].children.length; i++) {
+      this.$refs.stickyTableHead.children[0].children[i].style.width = this.$slots['p-head'][0].children[i].elm.clientWidth +'px'
+    }
   },
   created () {
-    window.addEventListener('scroll', this.tableHeader)
-    window.addEventListener('scroll', this.colFixed)
-    window.addEventListener('scroll', this.horizontalScroll)
-    window.addEventListener('resize', this.tableHeader)
-    window.addEventListener('resize', this.horizontalScroll)
-    window.addEventListener('resize', this.colFixed)
-    window.addEventListener('resize', this.colHeight)
-    window.addEventListener('resize', this.colWidth)
+    // clone table head into table sticky head
+    this.$slots['p-sticky-head'] = this.$slots['p-head']
   },
   destroyed () {
-    window.removeEventListener('scroll', this.tableHeader)
-    window.removeEventListener('scroll', this.colFixed)
+    window.removeEventListener('scroll', this.verticalScroll)
     window.removeEventListener('scroll', this.horizontalScroll)
-    window.removeEventListener('resize', this.tableHeader)
+    window.removeEventListener('resize', this.verticalScroll)
     window.removeEventListener('resize', this.horizontalScroll)
-    window.removeEventListener('resize', this.colFixed)
-    window.removeEventListener('resize', this.colHeight)
-    window.removeEventListener('resize', this.colWidth)
   },
   updated () {
-    this.colHeight()
-    this.colWidth()
-    this.tableHeader()
   }
 }
 </script>
 
-<style>
-.header-fixed {
+<style scoped>
+div {
+  overflow: auto;
+  z-index: 1;
+}
+table {
+  margin-bottom: 15px;
+}
+tr, td, th {
+  padding: 5px;
+}
+th {
+  background: #fff;
+}
+thead th {
+  z-index: -1;
+}
+thead th:first-child {
+  left: 0;  
+  position: -webkit-sticky; /* for Safari */
+  position: sticky;
+  z-index: 1;
+  left: 0;
+}
+.table-head-fixed {
+  z-index: 2;
+}
+tbody th {
+  position: -webkit-sticky; /* for Safari */
+  position: sticky;
+  left: 0;
+  background: #FFF;
+}
+.table-head-fixed {
   position: fixed;
-  display: block;
-  top: 0px;
-  background-color: white;
-  border: none;
-}
-
-.header-fixed thead {
-  border: none;
-}
-
-.header-fixed tr {
-  border: none;
-}
-
-.col-fixed {
-  position: fixed;
-  display: block;
-  overflow-x: auto;
-  top: 5px;
-  background-color: white;
-}
-
-.col-fixed td {
-  word-wrap: break-word;
-  max-width: 100px;
-}
-
-.hide {
-  visibility: hidden;
-  border: none !important;
+  top: 0;
 }
 </style>
