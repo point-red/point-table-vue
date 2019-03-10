@@ -49,7 +49,7 @@
     <ul class="pagination-list">
       <template v-for="(n, index) in pageCount">
       <li :key="index" v-if="showPageNumber(n)">
-        <a @click="page=n" class="pagination-link" :class="{'is-current': page == n}">{{n}}</a>
+        <a @click="paginateNumber(n)" class="pagination-link" :class="{'is-current': page == n}">{{n}}</a>
       </li>
       </template>
     </ul>
@@ -173,9 +173,15 @@ export default {
     },
     paginatePrev () {
       this.page -= 1
+      this.init()
     },
     paginateNext () {
       this.page += 1
+      this.init()
+    },
+    paginateNumber (n) {
+      this.page = n
+      this.init()
     },
     showPageNumber(n) {
       // first three number

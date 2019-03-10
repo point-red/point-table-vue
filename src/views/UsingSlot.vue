@@ -3,7 +3,7 @@
     <section class="section">
       <div class="container">
         <h1 class="title">Simple Table</h1>
-        <point-table>
+        <point-table :slot-data="streets">
           <template slot="p-head">
             <tr>
               <th style="min-width:200px">Name</th>
