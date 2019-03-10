@@ -8,18 +8,20 @@
             <tr>
               <th style="min-width:200px">Name</th>
               <th>Address</th>
-              <th>Notes</th>
-              <th>Phone</th>
-              <th>Board</th>
+              <th>City</th>
+              <th>Postal Code</th>
+              <th>Latitude</th>
+              <th>Longitude</th>
             </tr>
           </template>
           <template slot="p-body">
-            <tr v-for="(n, index) in 20" :key="index">
-              <th>John Doe {{index}}</th>
-              <td>2{{index}} Street</td>
-              <td>Lorem ipsum dolor sit amet consectetur adipisicing elit. Distinctio illo provident ullam architecto est quas magni rerum dolorum illum corporis saepe amet fuga omnis facere itaque suscipit, alias laboriosam pariatur.</td>
-              <td>+62731469{{index}}</td>
-              <td>Boarding</td>
+            <tr v-for="(data, index) in streets" :key="index">
+              <th>{{ data.street_name }}</th>
+              <td>{{ data.street_address }}</td>
+              <td>{{ data.city }}</td>
+              <td>{{ data.postal_code }}</td>
+              <td>Coordinate : {{ data.latitude }}</td>
+              <td>Coordinate : {{ data.longitude }}</td>
             </tr>
           </template>
         </point-table>
@@ -30,11 +32,17 @@
 
 <script>
 import PointTable from '@/components/PointTable'
+import streets from '@/street.json'
 
 export default {
   name: 'using-slot',
   components: {
     PointTable
+  },
+  data () {
+    return {
+      streets: streets
+    }
   }
 }
 </script>

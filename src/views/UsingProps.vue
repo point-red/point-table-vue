@@ -18,7 +18,6 @@
 
 <script>
 import PointTable from '@/components/PointTable'
-import posts from '@/posts.json'
 import streets from '@/street.json'
 
 export default {
@@ -29,7 +28,6 @@ export default {
   data () {
     return {
       streets: streets,
-      posts: posts,
       headers: {
         'city': 'City',
         'street_address': 'Street Address',
