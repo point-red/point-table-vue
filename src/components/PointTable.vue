@@ -1,11 +1,11 @@
 <template>
 <div>
-  <div ref="tableWrapper" class="table-wraper" @scroll="horizontalScroll">
-    <div class="columns" v-if="data">
-      <div class="column is-one-quarter">
-        <input class="input" type="text" placeholder="Search" @keyup="filterSearch" v-model="searchText">
-      </div>
+  <div class="columns" v-if="data">
+    <div class="column is-one-quarter">
+      <input class="input" type="text" placeholder="Search" @keyup="filterSearch" v-model="searchText">
     </div>
+  </div>
+  <div ref="tableWrapper" class="table-wrapper" @scroll="horizontalScroll">    
     <table ref="mainTable">
       <thead ref="tableHead">
         <slot name="p-head">
@@ -268,7 +268,7 @@ export default {
 </script>
 
 <style scoped>
-div {
+.table-wrapper {
   overflow: auto;
   z-index: 1;
 }
