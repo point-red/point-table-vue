@@ -9,8 +9,8 @@
     <table ref="mainTable">
       <thead ref="tableHead">
         <slot name="p-head">
-          <tr v-if="computedHead">
-            <template v-for="(key, index) in computedHead">
+          <tr v-if="computedColumns">
+            <template v-for="(key, index) in computedColumns">
               <th :key="index">{{ key }}</th>
             </template>
           </tr>
@@ -18,8 +18,8 @@
       </thead>
       <thead ref="stickyTableHead" class="table-head-fixed">
         <slot name="p-sticky-head">
-          <tr v-if="computedHead">
-            <template v-for="(key, index) in computedHead">
+          <tr v-if="computedColumns">
+            <template v-for="(key, index) in computedColumns">
               <th :key="index">{{ key }}</th>
             </template>
           </tr>
@@ -27,8 +27,8 @@
       </thead>
       <thead ref="stickyBgTableHead" class="table-bg-head-fixed">
         <slot name="p-sticky-bg-head">
-          <tr v-if="computedHead">
-            <template v-for="(key, index) in computedHead">
+          <tr v-if="computedColumns">
+            <template v-for="(key, index) in computedColumns">
               <th :key="index">{{ key }}</th>
             </template>
           </tr>
@@ -36,7 +36,7 @@
       </thead>
       <tbody ref="tableBody">
         <slot name="p-body">
-          <tr v-for="(data, indexData) in computedBody" :key="indexData">
+          <tr v-for="(data, indexData) in computedData" :key="indexData">
             <template v-for="(key, indexKey) in Object.keys(data)">
               <th :key="indexKey" v-if="indexKey == 0">{{ data[key] }}</th>
               <td :key="indexKey" v-else>{{ data[key] }}</td>
@@ -69,7 +69,7 @@ export default {
     data: {
       type: Array
     },
-    headers: {
+    columns: {
       type: Object
     },
     limit: {
@@ -95,16 +95,16 @@ export default {
         return false
       }
     },
-    computedHead () {
-      if (this.headers != undefined) {
-        return Object.values(this.headers)
+    computedColumns () {
+      if (this.columns != undefined) {
+        return Object.values(this.columns)
       } else if (this.mutableBody) {
         return Object.keys(this.mutableBody[0])
       } else {
         return
       }
     },
-    computedBody () {
+    computedData () {
       // filtered data
       if (this.filteredData) {
         return this.filteredData.slice((this.limit * this.page) - this.limit, this.limit * this.page)
@@ -117,7 +117,7 @@ export default {
     }
   },
   watch: {
-    computedBody: function (val) {
+    computedData: function (val) {
       this.$emit('filtered', val)
     },
     data: function (val) {
@@ -218,10 +218,16 @@ export default {
     },
     filterSearch () {
       this.filteredData = this.mutableBody.filter((obj) => {
+        let result = false
         for (let key in obj) {        
           let value = obj[key] + ''
-          return value.toLowerCase().match('.*' + this.searchText.toLowerCase() + '.*')
+          if (value.toLowerCase().match('.*' + this.searchText.toLowerCase() + '.*')) {
+            result = true
+            break
+          }
         }
+
+        return result
       })
       this.page = 1
     }
@@ -241,7 +247,7 @@ export default {
     this.$slots['p-sticky-head'] = this.$slots['p-head']
     this.$slots['p-sticky-bg-head'] = this.$slots['p-head']    
     // set default filtered data    
-    this.$emit('filtered', this.computedBody)
+    this.$emit('filtered', this.computedData)
   },
   updated () {
     // reinitiate table sticky head

@@ -10,7 +10,7 @@
 
       <div class="container">
         <h1 class="title">With Custom Header</h1>
-        <point-table :data="streets" :headers="headers"/>
+        <point-table :data="streets" :columns="columns"/>
       </div>
     </section>
   </div>
@@ -28,7 +28,7 @@ export default {
   data () {
     return {
       streets: streets,
-      headers: {
+      columns: {
         'city': 'City',
         'street_address': 'Street Address',
         'street_name': 'Street Name',
