@@ -154,7 +154,7 @@ export default {
       if (this.showHeaderFixed) {
         // sync sticky table head with original table head
         this.$refs.stickyTableHead.style.left = this.$refs.mainTable.getBoundingClientRect().x + 'px'
-        var bodyX = this.$refs.tableBody.children[0].children[0].getBoundingClientRect().x;
+        var bodyX = this.$refs.tableBody.children[0].children[0].getBoundingClientRect().x
         var wrapperX = this.$refs.tableWrapper.getBoundingClientRect().x
         var wrapperWidth = this.$refs.tableWrapper.clientWidth
         // remove fixed head that out of table area
@@ -164,7 +164,7 @@ export default {
             var thWidth = this.$refs.stickyTableHead.children[i].children[j].clientWidth
             if (j > 0) {
               // hide column if outside wrapper width
-              if (thX <= bodyX || thX + thWidth >= wrapperWidth + wrapperX) {
+              if (thX <= bodyX || thX + thWidth >= wrapperWidth + wrapperX + 1) {
                 this.$refs.stickyTableHead.children[i].children[j].style.visibility = 'hidden'
               } else {
                 this.$refs.stickyTableHead.children[i].children[j].style.visibility = 'visible'
