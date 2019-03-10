@@ -63,6 +63,7 @@
 </template>
 
 <script>
+import debounce from 'lodash/debounce'
 export default {
   name: 'PointTable',
   props: {
@@ -216,7 +217,7 @@ export default {
 
       return false
     },
-    filterSearch () {
+    filterSearch: debounce (function () {
       this.filteredData = this.mutableBody.filter((obj) => {
         let result = false
         for (let key in obj) {        
@@ -230,7 +231,7 @@ export default {
         return result
       })
       this.page = 1
-    }
+    }, 200)
   },
   mounted () {
     window.addEventListener('scroll', this.init)
