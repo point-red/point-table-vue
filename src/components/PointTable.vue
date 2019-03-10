@@ -1,7 +1,7 @@
 <template>
 <div>
   <div class="columns" v-if="data">
-    <div class="column is-one-quarter">
+    <div class="column is-one-quarter" v-if="!hideSearch">
       <input class="input" type="text" placeholder="Search" @keyup="filterSearch" v-model="searchText">
     </div>
   </div>
@@ -76,6 +76,10 @@ export default {
     limit: {
       type: Number,
       default: 10
+    },
+    hideSearch: {
+      type: Boolean,
+      default: false
     }
   },
   data: function () {
