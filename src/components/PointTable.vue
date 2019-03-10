@@ -1,45 +1,59 @@
 <template>
-<div ref="tableWrapper" @scroll="horizontalScroll">
-  <table ref="mainTable">
-    <thead ref="tableHead">
-      <slot name="p-head">
-        <tr v-if="mutableHead">
-          <template v-for="(key, index) in mutableHead">
-            <th :key="index">{{ key }}</th>
-          </template>
-        </tr>
-      </slot>
-    </thead>
-    <thead ref="stickyTableHead" class="table-head-fixed">
-      <slot name="p-sticky-head">
-        <tr v-if="mutableHead">
-          <template v-for="(key, index) in mutableHead">
-            <th :key="index">{{ key }}</th>
-          </template>
-        </tr>
-      </slot>
-    </thead>
-    <thead ref="stickyBgTableHead" class="table-bg-head-fixed">
-      <slot name="p-sticky-bg-head">
-        <tr v-if="mutableHead">
-          <template v-for="(key, index) in mutableHead">
-            <th :key="index">{{ key }}</th>
-          </template>
-        </tr>
-      </slot>
-    </thead>
-    <tbody ref="tableBody">
-      <slot name="p-body">
-        <tr v-for="(data, indexData) in mutableBody" :key="indexData">
-          <template v-for="(key, indexKey) in Object.keys(data)">
-            <th :key="indexKey" v-if="indexKey == 0">{{ data[key] }}</th>
-            <td :key="indexKey" v-else>{{ data[key] }}</td>
-          </template>
-        </tr>
-      </slot>
-    </tbody>
-  </table>
-  <div ref="anchorBottom"></div>
+<div>
+  <div ref="tableWrapper" class="table-wraper" @scroll="horizontalScroll">
+    <table ref="mainTable">
+      <thead ref="tableHead">
+        <slot name="p-head">
+          <tr v-if="computedHead">
+            <template v-for="(key, index) in computedHead">
+              <th :key="index">{{ key }}</th>
+            </template>
+          </tr>
+        </slot>
+      </thead>
+      <thead ref="stickyTableHead" class="table-head-fixed">
+        <slot name="p-sticky-head">
+          <tr v-if="computedHead">
+            <template v-for="(key, index) in computedHead">
+              <th :key="index">{{ key }}</th>
+            </template>
+          </tr>
+        </slot>
+      </thead>
+      <thead ref="stickyBgTableHead" class="table-bg-head-fixed">
+        <slot name="p-sticky-bg-head">
+          <tr v-if="computedHead">
+            <template v-for="(key, index) in computedHead">
+              <th :key="index">{{ key }}</th>
+            </template>
+          </tr>
+        </slot>
+      </thead>
+      <tbody ref="tableBody">
+        <slot name="p-body">
+          <tr v-for="(data, indexData) in computedBody" :key="indexData">
+            <template v-for="(key, indexKey) in Object.keys(data)">
+              <th :key="indexKey" v-if="indexKey == 0">{{ data[key] }}</th>
+              <td :key="indexKey" v-else>{{ data[key] }}</td>
+            </template>
+          </tr>
+        </slot>
+      </tbody>
+    </table>
+    <div ref="anchorBottom"></div>  
+  </div>
+  <hr/>
+  <div class="pagination is-centered" v-if="pageCount > 1 && mutableBody">
+    <a class="pagination-previous" @click="paginatePrev" :disabled="page == 1">Prev</a>
+    <a class="pagination-next" @click="paginateNext" :disabled="page == pageCount">Next</a>
+    <ul class="pagination-list">
+      <template v-for="(n, index) in pageCount">
+      <li :key="index" v-if="showPageNumber(n)">
+        <a @click="page=n" class="pagination-link" :class="{'is-current': page == n}">{{n}}</a>
+      </li>
+      </template>
+    </ul>
+  </div>
 </div>
 </template>
 
@@ -52,13 +66,18 @@ export default {
     },
     headers: {
       type: Object
+    },
+    limit: {
+      type: Number,
+      default: 10
     }
   },
   data: function () {
     return {
       anchorTop: 0,
       anchorBottom: 0,
-      mutableBody: this.data
+      mutableBody: this.data,
+      page: 1
     }
   },
   computed: {
@@ -69,13 +88,26 @@ export default {
         return false
       }
     },
-    mutableHead () {
+    computedHead () {
       if (this.headers != undefined) {
         return Object.values(this.headers)
       } else if (this.mutableBody) {
         return Object.keys(this.mutableBody[0])
       } else {
         return
+      }
+    },
+    computedBody () {
+      // slice pagination data if using props
+      if (this.mutableBody) {
+        return this.mutableBody.slice((this.limit * this.page) - this.limit, this.limit * this.page)
+      }
+    },
+    pageCount () {
+      // count pagination data if using props
+      return 10
+      if (this.mutableBody) {
+        return Math.ceil(this.mutableBody.length / this.limit)
       }
     }
   },
@@ -138,6 +170,28 @@ export default {
         this.$refs.stickyTableHead.style.display = 'none'
         this.$refs.stickyBgTableHead.style.display = 'none'
       }
+    },
+    paginatePrev () {
+      this.page -= 1
+    },
+    paginateNext () {
+      this.page += 1
+    },
+    showPageNumber(n) {
+      // first three number
+      if (n <= 5 && this.page <= 3) {
+        return true
+      }
+      // between first three number and last three number
+      if (this.page >= 3 && n > this.page - 3 && n < this.page + 3) {
+        return true
+      }
+      // last three number
+      if (n > this.pageCount - 5 && this.page > this.pageCount - 3) {
+        return true
+      }
+
+      return false
     }
   },
   mounted () {
@@ -176,9 +230,6 @@ export default {
 div {
   overflow: auto;
   z-index: 1;
-}
-table {
-  margin-bottom: 15px;
 }
 tr, td, th {
   padding: 5px;

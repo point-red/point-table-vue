@@ -31,17 +31,17 @@ export default {
       streets: streets,
       posts: posts,
       headers: {
-        'city': 'city',
-        'street_address': 'street address',
-        'street_name': 'street name',
-        'street_number': 'street number',
-        'state': 'state',
-        'postal_code': 'postal code',
-        'country': 'country',
-        'country_code': 'country code',
-        'latitude': 'latitude',
-        'longitude': 'longitude',
-        'timezone': 'timezone'
+        'city': 'City',
+        'street_address': 'Street Address',
+        'street_name': 'Street Name',
+        'street_number': 'Street Number',
+        'state': 'State',
+        'postal_code': 'Postal Code',
+        'country': 'Country',
+        'country_code': 'CC',
+        'latitude': 'Latitude',
+        'longitude': 'Longitude',
+        'timezone': 'Timezone'
       }
     }
   }
