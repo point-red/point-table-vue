@@ -1,6 +1,11 @@
 <template>
 <div>
   <div ref="tableWrapper" class="table-wraper" @scroll="horizontalScroll">
+    <div class="columns" v-if="data">
+      <div class="column is-one-quarter">
+        <input class="input" type="text" placeholder="Search" @keyup="filterSearch" v-model="searchText">
+      </div>
+    </div>
     <table ref="mainTable">
       <thead ref="tableHead">
         <slot name="p-head">
@@ -31,7 +36,7 @@
       </thead>
       <tbody ref="tableBody">
         <slot name="p-body">
-          <tr v-for="(data, indexData) in computedBody" :key="indexData">
+          <tr v-for="(data, indexData) in filteredData" :key="indexData">
             <template v-for="(key, indexKey) in Object.keys(data)">
               <th :key="indexKey" v-if="indexKey == 0">{{ data[key] }}</th>
               <td :key="indexKey" v-else>{{ data[key] }}</td>
@@ -77,7 +82,9 @@ export default {
       anchorTop: 0,
       anchorBottom: 0,
       mutableBody: this.data,
-      page: 1
+      filteredData: this.data,
+      page: 1,
+      searchText: ''
     }
   },
   computed: {
@@ -99,13 +106,13 @@ export default {
     },
     computedBody () {
       // filtered data
-      if (this.mutableBody) {
-        return this.mutableBody.slice((this.limit * this.page) - this.limit, this.limit * this.page)
+      if (this.filteredData) {
+        return this.filteredData.slice((this.limit * this.page) - this.limit, this.limit * this.page)
       }
     },
     pageCount () {
-      if (this.mutableBody) {
-        return Math.ceil(this.mutableBody.length / this.limit)
+      if (this.filteredData) {
+        return Math.ceil(this.filteredData.length / this.limit)
       }
     }
   },
@@ -208,6 +215,15 @@ export default {
       }
 
       return false
+    },
+    filterSearch () {
+      this.filteredData = this.mutableBody.filter((obj) => {
+        for (let key in obj) {        
+          let value = obj[key] + ''
+          return value.toLowerCase().match('.*' + this.searchText.toLowerCase() + '.*')
+        }
+      })
+      this.page = 1
     }
   },
   mounted () {
@@ -225,7 +241,7 @@ export default {
     this.$slots['p-sticky-head'] = this.$slots['p-head']
     this.$slots['p-sticky-bg-head'] = this.$slots['p-head']    
     // set default filtered data
-    this.$emit('filtered', this.computedBody)
+    this.$emit('filtered', this.filteredData)
   },
   updated () {
     // reinitiate table sticky head
