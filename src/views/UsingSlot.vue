@@ -6,6 +6,11 @@
         <point-table :data="streets" @filtered="filtered">
           <template slot="p-head">
             <tr>
+              <th></th>
+              <th colspan="3" style="background:cyan;text-align:center">Address</th>
+              <th colspan="2" style="background:cyan;text-align:center">Coordinate</th>
+            </tr>
+            <tr>
               <th style="min-width:200px;">Name</th>
               <th>Address</th>
               <th>City</th>
@@ -24,7 +29,7 @@
               <td>Coordinate : {{ data.longitude }}</td>
             </tr>
           </template>
-        </point-table>
+        </point-table>    
       </div>
     </section>
   </div>
