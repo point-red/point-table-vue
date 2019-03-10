@@ -3,8 +3,8 @@
   <table ref="mainTable">
     <thead ref="tableHead">
       <slot name="p-head">
-        <tr v-if="mutableBody">
-          <template v-for="(key, index) in Object.keys(mutableBody[0])">
+        <tr v-if="mutableHead">
+          <template v-for="(key, index) in mutableHead">
             <th :key="index">{{ key }}</th>
           </template>
         </tr>
@@ -12,8 +12,8 @@
     </thead>
     <thead ref="stickyTableHead" class="table-head-fixed">
       <slot name="p-sticky-head">
-        <tr v-if="mutableBody">
-          <template v-for="(key, index) in Object.keys(mutableBody[0])">
+        <tr v-if="mutableHead">
+          <template v-for="(key, index) in mutableHead">
             <th :key="index">{{ key }}</th>
           </template>
         </tr>
@@ -21,8 +21,8 @@
     </thead>
     <thead ref="stickyBgTableHead" class="table-bg-head-fixed">
       <slot name="p-sticky-bg-head">
-        <tr v-if="mutableBody">
-          <template v-for="(key, index) in Object.keys(mutableBody[0])">
+        <tr v-if="mutableHead">
+          <template v-for="(key, index) in mutableHead">
             <th :key="index">{{ key }}</th>
           </template>
         </tr>
@@ -50,15 +50,14 @@ export default {
     data: {
       type: Array
     },
-    header: {
-      type: Array
+    headers: {
+      type: Object
     }
   },
   data: function () {
     return {
       anchorTop: 0,
       anchorBottom: 0,
-      mutableHead: this.header,
       mutableBody: this.data
     }
   },
@@ -68,6 +67,15 @@ export default {
         return true
       } else {
         return false
+      }
+    },
+    mutableHead () {
+      if (this.headers != undefined) {
+        return Object.values(this.headers)
+      } else if (this.mutableBody) {
+        return Object.keys(this.mutableBody[0])
+      } else {
+        return
       }
     }
   },

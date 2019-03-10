@@ -9,15 +9,8 @@
       <hr>
 
       <div class="container">
-        <h1 class="title">Rename Header</h1>
+        <h1 class="title">With Custom Header</h1>
         <point-table :data="streets" :headers="headers"/>
-      </div>
-
-      <hr>
-
-      <div class="container">
-        <h1 class="title">Custom Header</h1>
-        <point-table :data="streets" :custom-headers="customHeaders"/>
       </div>
     </section>
   </div>
@@ -49,39 +42,7 @@ export default {
         'latitude': 'latitude',
         'longitude': 'longitude',
         'timezone': 'timezone'
-      },
-      customHeaders: [
-        {
-          fields: [
-            {
-              caption: '',
-              colSpan: 1,
-              rowSpan: 1
-            },
-            {
-              caption: 'employee address',
-              colSpan: 10,
-              rowSpan: 1
-            }
-          ]
-        },
-        {
-          fields: [
-            {
-              caption: '', colSpan: 1, rowSpan: 1
-            },
-            {
-              caption: 'address', colSpan: 7, rowSpan: 1
-            },
-            {
-              caption: 'geolocation', colSpan: 2, rowSpan: 1
-            },
-            {
-              caption: '', colSpan: 1, rowSpan: 1
-            }
-          ]
-        }
-      ]
+      }
     }
   }
 }
