@@ -3,10 +3,10 @@
     <section class="section">
       <div class="container">
         <h1 class="title">Simple Table</h1>
-        <point-table :slot-data="streets">
+        <point-table :data="streets" @filtered="filtered">
           <template slot="p-head">
             <tr>
-              <th style="min-width:200px">Name</th>
+              <th style="min-width:200px;">Name</th>
               <th>Address</th>
               <th>City</th>
               <th>Postal Code</th>
@@ -15,7 +15,7 @@
             </tr>
           </template>
           <template slot="p-body">
-            <tr v-for="(data, index) in streets" :key="index">
+            <tr v-for="(data, index) in filteredData" :key="index">
               <th>{{ data.street_name }}</th>
               <td>{{ data.street_address }}</td>
               <td>{{ data.city }}</td>
@@ -33,6 +33,7 @@
 <script>
 import PointTable from '@/components/PointTable'
 import streets from '@/street.json'
+import { setTimeout } from 'timers';
 
 export default {
   name: 'using-slot',
@@ -41,7 +42,13 @@ export default {
   },
   data () {
     return {
-      streets: streets
+      streets: streets,
+      filteredData: streets
+    }
+  },
+  methods: {
+    filtered (filteredData) {
+      this.filteredData = filteredData
     }
   }
 }

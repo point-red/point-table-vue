@@ -42,7 +42,7 @@
     </table>
     <div ref="anchorBottom"></div>  
   </div>
-  <hr/>
+  <hr/>  
   <div class="pagination is-centered" v-if="pageCount > 1 && mutableBody">
     <a class="pagination-previous" @click="paginatePrev" :disabled="page == 1">Prev</a>
     <a class="pagination-next" @click="paginateNext" :disabled="page == pageCount">Next</a>
@@ -98,17 +98,23 @@ export default {
       }
     },
     computedBody () {
-      // slice pagination data if using props
+      // filtered data
       if (this.mutableBody) {
         return this.mutableBody.slice((this.limit * this.page) - this.limit, this.limit * this.page)
       }
     },
     pageCount () {
-      // count pagination data if using props
-      return 10
       if (this.mutableBody) {
         return Math.ceil(this.mutableBody.length / this.limit)
       }
+    }
+  },
+  watch: {
+    computedBody: function (val) {
+      this.$emit('filtered', val)
+    },
+    data: function (val) {
+      this.mutableBody = this.data
     }
   },
   methods: {
@@ -172,12 +178,16 @@ export default {
       }
     },
     paginatePrev () {
-      this.page -= 1
-      this.init()
+      if (this.page > 1) {
+        this.page -= 1
+        this.init()
+      }
     },
     paginateNext () {
-      this.page += 1
-      this.init()
+      if (this.page < this.pageCount) {
+        this.page += 1
+        this.init()
+      }
     },
     paginateNumber (n) {
       this.page = n
@@ -206,14 +216,22 @@ export default {
     window.addEventListener('scroll', this.horizontalScroll)
     window.addEventListener('resize', this.init)
     window.addEventListener('resize', this.verticalScroll)
-    window.addEventListener('resize', this.horizontalScroll)
+    window.addEventListener('resize', this.horizontalScroll)    
 
     this.init()
   },
   created () {
     // clone table head into table sticky head
     this.$slots['p-sticky-head'] = this.$slots['p-head']
-    this.$slots['p-sticky-bg-head'] = this.$slots['p-head']
+    this.$slots['p-sticky-bg-head'] = this.$slots['p-head']    
+    // set default filtered data
+    this.$emit('filtered', this.computedBody)
+  },
+  updated () {
+    // reinitiate table sticky head
+    this.$refs.stickyTableHead.innerHTML = this.$refs.tableHead.innerHTML
+    this.$refs.stickyBgTableHead.innerHTML = this.$refs.tableHead.innerHTML
+    this.init()
   },
   destroyed () {
     window.removeEventListener('scroll', this.init)
@@ -222,12 +240,6 @@ export default {
     window.removeEventListener('resize', this.init)
     window.removeEventListener('resize', this.horizontalScroll)
     window.removeEventListener('resize', this.verticalScroll)
-  },
-  updated () {
-    // reinitiate table sticky head
-    this.$refs.stickyTableHead.innerHTML = this.$refs.tableHead.innerHTML
-    this.$refs.stickyBgTableHead.innerHTML = this.$refs.tableHead.innerHTML
-    this.init()
   }
 }
 </script>
