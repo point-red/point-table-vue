@@ -3,16 +3,16 @@
     <section class="section">
       <div class="container">
         <h1 class="title">Simple Table | API</h1>
-        <point-table ref="simpleTable">
+        <point-table>
           <template slot="p-head">
             <tr>
-              <th>Id</th>
+              <th>No</th>
               <th>Title</th>
             </tr>
           </template>
           <template>
             <tr slot="p-body" v-for="(todo, index) in todos" :key="index">
-              <td>{{ todo.id }}</td>
+              <th>{{ todo.id }}</th>
               <td>{{ todo.title }}</td>
             </tr>
           </template>
@@ -24,6 +24,7 @@
 
 <script>
 import PointTable from '@/components/PointTable'
+import { setTimeout } from 'timers';
 const axios = require('axios')
 
 export default {
@@ -42,11 +43,9 @@ export default {
     }
   },
   created () {
-    const vm = this
     axios.get('https://jsonplaceholder.typicode.com/todos')
       .then(response => {
-        vm.todos = response.data
-        this.$refs.simpleTable.init()
+        this.todos = response.data
       })
   }
 }

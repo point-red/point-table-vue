@@ -11,10 +11,22 @@
       </slot>
     </thead>
     <thead ref="stickyTableHead" class="table-head-fixed">
-      <slot name="p-sticky-head"></slot>
+      <slot name="p-sticky-head">
+        <tr v-if="mutableBody">
+          <template v-for="(key, index) in Object.keys(mutableBody[0])">
+            <th :key="index">{{ key }}</th>
+          </template>
+        </tr>
+      </slot>
     </thead>
     <thead ref="stickyBgTableHead" class="table-bg-head-fixed">
-      <slot name="p-sticky-bg-head"></slot>
+      <slot name="p-sticky-bg-head">
+        <tr v-if="mutableBody">
+          <template v-for="(key, index) in Object.keys(mutableBody[0])">
+            <th :key="index">{{ key }}</th>
+          </template>
+        </tr>
+      </slot>
     </thead>
     <tbody ref="tableBody">
       <slot name="p-body">
@@ -27,7 +39,6 @@
       </slot>
     </tbody>
   </table>
-  <table ref="headerTable"></table>
   <div ref="anchorBottom"></div>
 </div>
 </template>
@@ -45,8 +56,6 @@ export default {
   },
   data: function () {
     return {
-      isTableHeadFixed: true,
-      tableHeadHeight: 0,
       anchorTop: 0,
       anchorBottom: 0,
       mutableHead: this.header,
@@ -63,7 +72,29 @@ export default {
     }
   },
   methods: {
-    horizontalScroll () {
+    init () {
+      this.$refs.stickyTableHead.style.width = this.$refs.mainTable.clientWidth + 'px'
+      this.$refs.stickyBgTableHead.style.width = this.$refs.tableWrapper.clientWidth + 'px'
+      for (var i = 0; i < this.$refs.tableHead.children[0].children.length; i++) {
+        this.$refs.stickyTableHead.children[0].children[i].style.width = this.$refs.tableHead.children[0].children[i].clientWidth + 'px'
+        this.$refs.stickyBgTableHead.children[0].children[i].style.width = this.$refs.tableHead.children[0].children[i].clientWidth + 'px'
+        // add background for hidden head
+        this.$refs.stickyBgTableHead.children[0].children[i].style.color = '#fff'
+        this.$refs.stickyBgTableHead.children[0].children[i].style.background = '#fff'
+        
+        var wrapperWidth = this.$refs.tableWrapper.clientWidth
+        var thX = this.$refs.stickyTableHead.children[0].children[i].getBoundingClientRect().x
+        var thWidth = this.$refs.stickyTableHead.children[0].children[i].clientWidth
+        if (thX + thWidth > wrapperWidth) {
+          this.$refs.stickyTableHead.children[0].children[i].style.visibility = 'hidden'
+        } else {
+          this.$refs.stickyTableHead.children[0].children[i].style.visibility = 'visible'
+        }
+      }
+      this.$refs.stickyTableHead.style.display = 'none'
+      this.$refs.stickyBgTableHead.style.display = 'none'
+    },
+    horizontalScroll () {      
       if (this.showHeaderFixed) {
         // sync sticky table head with original table head
         this.$refs.stickyTableHead.style.left = this.$refs.mainTable.getBoundingClientRect().x + 'px'
@@ -74,7 +105,6 @@ export default {
         for (var i = 0; i < this.$refs.stickyTableHead.children[0].children.length; i++) {
           var thX = this.$refs.stickyTableHead.children[0].children[i].getBoundingClientRect().x
           var thWidth = this.$refs.stickyTableHead.children[0].children[i].clientWidth
-          // ignore sticky th
           if (i > 0) {
             // hide column if outside wrapper width
             if (thX <= bodyX || thX + thWidth >= wrapperWidth + wrapperX) {
@@ -102,45 +132,34 @@ export default {
       }
     }
   },
-  mounted () {    
+  mounted () {
+    window.addEventListener('scroll', this.init)
     window.addEventListener('scroll', this.verticalScroll)
     window.addEventListener('scroll', this.horizontalScroll)
+    window.addEventListener('resize', this.init)
     window.addEventListener('resize', this.verticalScroll)
     window.addEventListener('resize', this.horizontalScroll)
 
-    this.$refs.stickyTableHead.style.width = this.$refs.mainTable.clientWidth + 'px'
-    this.$refs.stickyBgTableHead.style.width = this.$refs.tableWrapper.clientWidth + 'px'
-    for (var i = 0; i < this.$refs.tableHead.children[0].children.length; i++) {
-      this.$refs.stickyTableHead.children[0].children[i].style.width = this.$refs.tableHead.children[0].children[i].clientWidth + 'px'
-      this.$refs.stickyBgTableHead.children[0].children[i].style.width = this.$refs.tableHead.children[0].children[i].clientWidth + 'px'
-      // add background for hidden head
-      this.$refs.stickyBgTableHead.children[0].children[i].style.color = '#fff'
-      this.$refs.stickyBgTableHead.children[0].children[i].style.background = '#fff'
-      
-      var wrapperWidth = this.$refs.tableWrapper.clientWidth
-      var thX = this.$refs.stickyTableHead.children[0].children[i].getBoundingClientRect().x
-      var thWidth = this.$refs.stickyTableHead.children[0].children[i].clientWidth
-      if (thX + thWidth > wrapperWidth) {
-        this.$refs.stickyTableHead.children[0].children[i].style.visibility = 'hidden'
-      } else {
-        this.$refs.stickyTableHead.children[0].children[i].style.visibility = 'visible'
-      }
-    }
-    this.$refs.stickyTableHead.style.display = 'none'
-    this.$refs.stickyBgTableHead.style.display = 'none'
+    this.init()
   },
   created () {
     // clone table head into table sticky head
-    if (this.$slots['p-head']) {
-      this.$slots['p-sticky-head'] = this.$slots['p-head']
-      this.$slots['p-sticky-bg-head'] = this.$slots['p-head']
-    }
+    this.$slots['p-sticky-head'] = this.$slots['p-head']
+    this.$slots['p-sticky-bg-head'] = this.$slots['p-head']
   },
   destroyed () {
+    window.removeEventListener('scroll', this.init)
     window.removeEventListener('scroll', this.horizontalScroll)
     window.removeEventListener('scroll', this.verticalScroll)
+    window.removeEventListener('resize', this.init)
     window.removeEventListener('resize', this.horizontalScroll)
     window.removeEventListener('resize', this.verticalScroll)
+  },
+  updated () {
+    // reinitiate table sticky head
+    this.$refs.stickyTableHead.innerHTML = this.$refs.tableHead.innerHTML
+    this.$refs.stickyBgTableHead.innerHTML = this.$refs.tableHead.innerHTML
+    this.init()
   }
 }
 </script>
@@ -156,11 +175,9 @@ table {
 tr, td, th {
   padding: 5px;
 }
-th {
-  background: #fff;
-}
 thead th {
   z-index: -1;
+  background: #fff;
 }
 thead th:first-child {
   left: 0;  
@@ -185,5 +202,4 @@ tbody th {
   left: 0;
   background: #fff;
 }
-
 </style>
