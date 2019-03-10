@@ -36,7 +36,7 @@
       </thead>
       <tbody ref="tableBody">
         <slot name="p-body">
-          <tr v-for="(data, indexData) in filteredData" :key="indexData">
+          <tr v-for="(data, indexData) in computedBody" :key="indexData">
             <template v-for="(key, indexKey) in Object.keys(data)">
               <th :key="indexKey" v-if="indexKey == 0">{{ data[key] }}</th>
               <td :key="indexKey" v-else>{{ data[key] }}</td>
@@ -240,8 +240,8 @@ export default {
     // clone table head into table sticky head
     this.$slots['p-sticky-head'] = this.$slots['p-head']
     this.$slots['p-sticky-bg-head'] = this.$slots['p-head']    
-    // set default filtered data
-    this.$emit('filtered', this.filteredData)
+    // set default filtered data    
+    this.$emit('filtered', this.computedBody)
   },
   updated () {
     // reinitiate table sticky head
