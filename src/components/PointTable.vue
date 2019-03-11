@@ -5,7 +5,12 @@
       <input class="input" type="text" placeholder="Search" @keyup="filterSearch" v-model="searchText">
     </div>
   </div>
-  <div ref="tableWrapper" class="table-wrapper" @scroll="horizontalScroll">    
+  <div ref="tableWrapper" class="table-wrapper" @scroll="horizontalScroll">
+    <div ref="loadingBlock" class="loading-block" v-show="isLoading">
+      <p class="text-center" style="text-align:center;margin:15px 0">
+        Loading...
+      </p>
+    </div>
     <table ref="mainTable">
       <thead ref="tableHead">
         <slot name="p-head">
@@ -44,7 +49,7 @@
           </tr>
         </slot>
       </tbody>
-    </table>
+    </table>    
     <div ref="anchorBottom"></div>  
   </div>
   <hr/>  
@@ -78,6 +83,10 @@ export default {
       default: 10
     },
     hideSearch: {
+      type: Boolean,
+      default: false
+    },
+    isLoading: {
       type: Boolean,
       default: false
     }
@@ -131,6 +140,8 @@ export default {
   },
   methods: {
     init () {
+      this.$refs.loadingBlock.style.width = this.$refs.tableWrapper.clientWidth + 'px'
+      this.$refs.loadingBlock.style.height = this.$refs.tableWrapper.clientHeight + 'px'
       this.$refs.stickyTableHead.style.width = this.$refs.mainTable.clientWidth + 'px'
       this.$refs.stickyBgTableHead.style.width = this.$refs.tableWrapper.clientWidth + 'px'
       for (var i = 0; i < this.$refs.tableHead.children.length; i++) {
@@ -256,7 +267,7 @@ export default {
     this.$slots['p-sticky-head'] = this.$slots['p-head']
     this.$slots['p-sticky-bg-head'] = this.$slots['p-head']    
     // set default filtered data    
-    this.$emit('filtered', this.computedData)
+    this.$emit('filtered', this.computedData)    
   },
   updated () {
     // reinitiate table sticky head
@@ -309,5 +320,11 @@ tbody th {
   position: sticky;
   left: 0;
   background: #fff;
+}
+.loading-block {
+  position:absolute;
+  background: #040404DD;
+  z-index:5;
+  color: #eee;
 }
 </style>

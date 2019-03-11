@@ -8,7 +8,7 @@
             <input class="input" type="text" placeholder="Search" @keyup="filterSearch" v-model="searchText">
           </div>
         </div>        
-        <point-table>
+        <point-table :is-loading="isLoading">
           <template slot="p-head">
             <tr>
               <th>No</th>
@@ -48,21 +48,26 @@ export default {
           body: null
         }
       ],
-      searchText: ''
+      searchText: '',
+      isLoading: false
     }
   },
   methods: {
     filterSearch: debounce (function () {
+      this.isLoading = true
       axios.get('https://jsonplaceholder.typicode.com/posts?_limit=10&q=' + this.searchText)
         .then(response => {
           this.posts = response.data
+          this.isLoading = false
         })
     }, 200)
   },
   created () {
+    this.isLoading = true
     axios.get('https://jsonplaceholder.typicode.com/posts?_limit=10')
       .then(response => {
         this.posts = response.data
+        this.isLoading = false
       })
   }
 }
