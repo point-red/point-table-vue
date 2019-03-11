@@ -38,7 +38,6 @@
 <script>
 import PointTable from '@/components/PointTable'
 import streets from '@/street.json'
-import { setTimeout } from 'timers';
 
 export default {
   name: 'using-slot',
