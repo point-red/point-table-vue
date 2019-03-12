@@ -11,7 +11,7 @@
         Loading...
       </p>
     </div>
-    <table ref="mainTable">
+    <table ref="mainTable" class="table">
       <thead ref="tableHead">
         <slot name="p-head">
           <tr v-if="computedColumns">
