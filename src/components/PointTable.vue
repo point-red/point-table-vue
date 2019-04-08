@@ -169,27 +169,29 @@ export default {
       if (this.showHeaderFixed) {
         // sync sticky table head with original table head
         this.$refs.stickyTableHead.style.left = this.$refs.mainTable.getBoundingClientRect().x + 'px'
-        var bodyX = this.$refs.tableBody.children[0].children[0].getBoundingClientRect().x
-        var wrapperX = this.$refs.tableWrapper.getBoundingClientRect().x
-        var wrapperWidth = this.$refs.tableWrapper.clientWidth
-        // remove fixed head that out of table area
-        for (var i = 0; i < this.$refs.stickyTableHead.children.length; i++) {
-          for (var j = 0; j < this.$refs.stickyTableHead.children[i].children.length; j++) {
-            var thX = this.$refs.stickyTableHead.children[i].children[j].getBoundingClientRect().x
-            var thWidth = this.$refs.stickyTableHead.children[i].children[j].clientWidth
-            if (j > 0) {
-              // hide column if outside wrapper width
-              if (thX <= bodyX || thX + thWidth >= wrapperWidth + wrapperX + 1) {
-                this.$refs.stickyTableHead.children[i].children[j].style.visibility = 'hidden'
+        if (this.$refs.tableBody.children) {
+          var bodyX = this.$refs.tableBody.children[0].children[0].getBoundingClientRect().x
+          var wrapperX = this.$refs.tableWrapper.getBoundingClientRect().x
+          var wrapperWidth = this.$refs.tableWrapper.clientWidth
+          // remove fixed head that out of table area
+          for (var i = 0; i < this.$refs.stickyTableHead.children.length; i++) {
+            for (var j = 0; j < this.$refs.stickyTableHead.children[i].children.length; j++) {
+              var thX = this.$refs.stickyTableHead.children[i].children[j].getBoundingClientRect().x
+              var thWidth = this.$refs.stickyTableHead.children[i].children[j].clientWidth
+              if (j > 0) {
+                // hide column if outside wrapper width
+                if (thX <= bodyX || thX + thWidth >= wrapperWidth + wrapperX + 1) {
+                  this.$refs.stickyTableHead.children[i].children[j].style.visibility = 'hidden'
+                } else {
+                  this.$refs.stickyTableHead.children[i].children[j].style.visibility = 'visible'
+                }
               } else {
+                // freeze column always visible
                 this.$refs.stickyTableHead.children[i].children[j].style.visibility = 'visible'
               }
-            } else {
-              // freeze column always visible
-              this.$refs.stickyTableHead.children[i].children[j].style.visibility = 'visible'
             }
           }
-        }        
+        }
       }
     },
     verticalScroll () {
