@@ -169,7 +169,7 @@ export default {
       if (this.showHeaderFixed) {
         // sync sticky table head with original table head
         this.$refs.stickyTableHead.style.left = this.$refs.mainTable.getBoundingClientRect().x + 'px'
-        if (this.$refs.tableBody.children) {
+        if (this.$refs.tableBody.children.length) {
           var bodyX = this.$refs.tableBody.children[0].children[0].getBoundingClientRect().x
           var wrapperX = this.$refs.tableWrapper.getBoundingClientRect().x
           var wrapperWidth = this.$refs.tableWrapper.clientWidth
